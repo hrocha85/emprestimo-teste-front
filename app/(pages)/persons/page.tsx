@@ -197,16 +197,17 @@ export default function Persons() {
               type="number"
               {...register('amount')}
               error={!!errors?.amount}
-              helperText={errors?.amount?.message}
+              helperText={typeof errors?.amount?.message === 'string' ? errors.amount.message : ''}
               sx={{ my: 2 }}
             />
+  
             <TextField
               fullWidth
               label="Número de Parcelas"
               type="number"
               {...register('numberOfInstallments')}
               error={!!errors?.numberOfInstallments}
-              helperText={errors?.numberOfInstallments?.message}
+              helperText={typeof errors?.numberOfInstallments?.message === 'string' ? errors.numberOfInstallments.message : ''}
               sx={{ my: 2 }}
             />
             <Box sx={{ mt: 2, textAlign: 'right' }}>
