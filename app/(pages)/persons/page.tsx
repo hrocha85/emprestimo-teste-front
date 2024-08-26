@@ -196,8 +196,8 @@ export default function Persons() {
               label="Valor"
               type="number"
               {...register('amount')}
-              error={!!errors.amount}
-              helperText={errors.amount?.message}
+              error={!!errors?.amount}
+              helperText={errors?.amount?.message}
               sx={{ my: 2 }}
             />
             <TextField
@@ -205,8 +205,8 @@ export default function Persons() {
               label="Número de Parcelas"
               type="number"
               {...register('numberOfInstallments')}
-              error={!!errors.numberOfInstallments}
-              helperText={errors.numberOfInstallments?.message}
+              error={!!errors?.numberOfInstallments}
+              helperText={errors?.numberOfInstallments?.message}
               sx={{ my: 2 }}
             />
             <Box sx={{ mt: 2, textAlign: 'right' }}>
