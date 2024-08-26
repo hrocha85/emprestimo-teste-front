@@ -86,7 +86,7 @@ export default function Register() {
               variant="outlined"
               {...register("name")}
               error={!!errors?.name}
-              helperText={typeof errors?.name?.message === 'string' ? errors?.name?.message : ""}
+              helperText={typeof errors?.amount?.message === 'string' ? errors?.amount?.message : undefined}
             />
             <TextField
               fullWidth
