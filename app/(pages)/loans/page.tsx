@@ -14,7 +14,7 @@ export default function Loans() {
     async function fetchLoans() {
       setLoading(true); // Inicia o carregamento
       try {
-        const response = await fetch('http://localhost:3001/loans');
+        const response = await fetch('https://emprestimo-teste-back.onrender.com/loans');
         if (!response.ok) throw new Error('Erro ao buscar empréstimos');
         const data = await response.json();
         setLoans(data);
@@ -41,7 +41,7 @@ export default function Loans() {
 
   const handlePayLoan = async (loanId: string) => {
     // Realizar pagamento de um empréstimo específico
-    const response = await fetch(`http://localhost:3001/loans/${loanId}/pay`, {
+    const response = await fetch(`https://emprestimo-teste-back.onrender.com/loans/${loanId}/pay`, {
       method: 'POST'
     });
 

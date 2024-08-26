@@ -21,11 +21,14 @@ export default function Persons() {
   const [success, setSuccess] = useState<string | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
 
+  console.log('success:', success)
+  console.log('error:', error)
+
   useEffect(() => {
     async function fetchPersons() {
       setLoading(true);
       try {
-        const response = await fetch('http://localhost:3001/person');
+        const response = await fetch('https://emprestimo-teste-back.onrender.com/person');
         if (!response.ok) {
           throw new Error('Erro ao buscar dados');
         }
@@ -89,7 +92,7 @@ export default function Persons() {
 
     setModalLoading(true);
     try {
-      const response = await fetch('http://localhost:3001/loans', {
+      const response = await fetch('https://emprestimo-teste-back.onrender.com/loans', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -114,7 +117,6 @@ export default function Persons() {
       setError('Erro ao cadastrar empréstimo.');
       setSuccess(null);
     } finally {
-     
       setModalLoading(false);
       setSnackbarOpen(true);
       handleCloseModal();
@@ -228,9 +230,15 @@ export default function Persons() {
         autoHideDuration={6000}
         onClose={handleSnackbarClose}
       >
-        <Alert onClose={handleSnackbarClose} severity={error ? 'error' : 'success'} sx={{ width: '100%' }}>
-          {success}
-        </Alert>
+        {error == 'string' ? (
+          <Alert onClose={handleSnackbarClose} severity="error" sx={{ width: '100%' }}>
+            {error}
+          </Alert>
+        ) : success == 'string' ? (
+          <Alert onClose={handleSnackbarClose} severity="success" sx={{ width: '100%' }}>
+            {success}
+          </Alert>
+        ) : <></>}
       </Snackbar>
     </main>
   );

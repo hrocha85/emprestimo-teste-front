@@ -10,14 +10,22 @@ export default function Register() {
   const [errorApi, setErrorApi] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, watch, formState: { errors } } = useForm({
     resolver: zodResolver(registerSchema),
   });
 
+  const watchedFields = watch(['name', 'identifier', 'birthDate']);
+
+  const isButtonDisabled = () => {
+    // Retorna true se algum campo estiver vazio
+    return watchedFields.some(field => !field?.trim());
+  };
+
   // Manipulação do submit do formulário
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: any) => {
+    console.log(data);
     try {
-      const response = await fetch('http://localhost:3001/person', {
+      const response = await fetch('https://emprestimo-teste-back.onrender.com/person', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -27,7 +35,6 @@ export default function Register() {
 
       if (response.ok) {
         setSuccess(true);
-        // Resetar os campos não é mais necessário pois o react-hook-form já faz isso
       } else {
         const errorData = await response.json();
         setErrorApi(errorData.message || 'Erro ao realizar cadastro.');
@@ -67,7 +74,7 @@ export default function Register() {
             alignItems: 'center',
             padding: 3,
             borderRadius: 1,
-            boxShadow: 3
+            boxShadow: 3,
           }}
         >
           <Typography variant="h5">Cadastro de Pessoa</Typography>
@@ -77,9 +84,9 @@ export default function Register() {
               margin="normal"
               label="Nome"
               variant="outlined"
-              {...register('name')}
-              error={!!errors.name}
-              helperText={errors.name?.message}
+              {...register("name")}
+              error={!!errors?.name}
+              helperText={typeof errors?.name?.message === 'string' ? errors?.name?.message : ""}
             />
             <TextField
               fullWidth
@@ -87,8 +94,8 @@ export default function Register() {
               label="Identificador"
               variant="outlined"
               {...register('identifier')}
-              error={!!errors.identifier}
-              helperText={errors.identifier?.message}
+              error={!!errors?.identifier}
+              helperText={typeof errors?.identifier?.message === 'string' ? errors?.identifier?.message : ''}
             />
             <TextField
               fullWidth
@@ -99,7 +106,7 @@ export default function Register() {
               InputLabelProps={{ shrink: true }}
               {...register('birthDate')}
               error={!!errors.birthDate}
-              helperText={errors.birthDate?.message}
+              helperText={typeof errors.birthDate?.message === 'string' ? errors?.birthDate?.message : ""}
             />
             <Button
               type="submit"
@@ -107,6 +114,7 @@ export default function Register() {
               variant="contained"
               color="primary"
               sx={{ mt: 3, mb: 2 }}
+              disabled={isButtonDisabled()}
             >
               Cadastrar
             </Button>
