@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, CircularProgress, Box } from '@mui/material';
-import { formatIdentifier, formatToBRL } from '../../utils/index.tsx';
+
 import { LoanProps } from '../../types';
+import { formatIdentifier, formatToBRL } from '@/app/utils';
 
 export default function Loans() {
   const [loans, setLoans] = useState<LoanProps[]>([]);

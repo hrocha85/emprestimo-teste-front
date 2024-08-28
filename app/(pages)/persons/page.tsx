@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react';
 import { PersonProps } from '../../types';
 import { Button, Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, CircularProgress, Snackbar, Alert, Modal, TextField } from '@mui/material';
-import { formatIdentifier, formatToBRL } from '../../utils/index';
+
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loanSchema } from '../../schemas/loan';
 import InputMask from 'react-input-mask';
+import { formatIdentifier, formatToBRL } from '@/app/utils';
 
 
 
@@ -184,7 +185,7 @@ export default function Persons() {
             Cadastrar Empréstimo para {selectedPersonName}
           </Typography>
           <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ mt: 2 }}>
-            
+
               <TextField
                 fullWidth
                 label="Valor"
