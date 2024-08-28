@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { TextField, Button, Typography, Container, Box, Snackbar, Alert } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { TextField, Button, Typography, Container, Box, Snackbar, Alert, MenuItem } from '@mui/material';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { registerSchema } from '@/app/schemas/register';
@@ -9,28 +9,37 @@ import { registerSchema } from '@/app/schemas/register';
 export default function Register() {
   const [errorApi, setErrorApi] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [tipoDocumento, setTipoDocumento] = useState('CPF');
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, watch, formState: { errors }, setValue } = useForm({
     resolver: zodResolver(registerSchema),
   });
 
   const watchedFields = watch(['name', 'identifier', 'birthDate']);
 
   const isButtonDisabled = () => {
-    // Retorna true se algum campo estiver vazio
     return watchedFields.some(field => !field?.trim());
   };
 
   // Manipulação do submit do formulário
   const onSubmit = async (data: any) => {
-    console.log(data);
+    const cleanIdentifier = (identifier: string): string => {
+      return identifier.replace(/[\.\-\s\/]/g, '');
+    };
+
+    // Limpa o valor do identifier
+    const cleanedData = {
+      ...data,
+      identifier: cleanIdentifier(data.identifier),
+  };
+
     try {
       const response = await fetch('https://emprestimo-teste-back.onrender.com/person', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(cleanedData),
       });
 
       if (response.ok) {
@@ -64,6 +73,44 @@ export default function Register() {
     }
   };
 
+  function formatIdentifier(value: string): string {
+    // Remove todos os caracteres que não são dígitos
+    value = value.replace(/\D/g, '');
+
+    switch (tipoDocumento) {
+      case 'CNPJ':
+        // Máscara para CNPJ (XX.XXX.XXX/XXXX-XX)
+        value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+        value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+        value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+        value = value.replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+        break;
+
+      default:
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+        break;
+    }
+
+    return value;
+  }
+
+  function handleChangeIdentifier(event: any) {
+    const input = event.target;
+    input.value = formatIdentifier(input.value);
+    setValue('identifier', input.value)
+  }
+
+  // Limpa o campo "Identificador" quando "tipoDocumento" é alterado
+  useEffect(() => {
+    setValue('identifier', ''); // Limpa o campo "identifier"
+  }, [tipoDocumento, setValue]);
+
+  const handleChangeEscolha = (event:any) => {
+    setTipoDocumento(event.target.value);
+  };
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
       <Container component="main" maxWidth="xs">
@@ -86,14 +133,37 @@ export default function Register() {
               variant="outlined"
               {...register("name")}
               error={!!errors?.name}
-              helperText={typeof errors?.amount?.message === 'string' ? errors?.amount?.message : undefined}
+              helperText={typeof errors?.name?.message === 'string' ? errors?.name?.message : ""}
             />
+             <TextField
+              fullWidth
+              margin="normal"
+              label="Tipo de Documento"
+              variant="outlined"
+              value={tipoDocumento}
+              onChange={handleChangeEscolha}
+              select
+            >
+              <MenuItem value="CPF">CPF</MenuItem>
+              <MenuItem value="CNPJ">CNPJ</MenuItem>
+              <MenuItem value="EU">Estudante Universitário</MenuItem>
+              <MenuItem value="AP">Aposentado</MenuItem>
+            </TextField>
             <TextField
               fullWidth
               margin="normal"
               label="Identificador"
               variant="outlined"
               {...register('identifier')}
+              onChange={handleChangeIdentifier}
+              inputProps={{ 
+                maxLength: 
+                  tipoDocumento === 'CPF' ? 14 : 
+                  tipoDocumento === 'CNPJ' ? 18 :
+                  tipoDocumento === 'EU' ? 8 : 
+                  tipoDocumento === 'AP' ? 10 : 
+                  undefined
+              }}
               error={!!errors?.identifier}
               helperText={typeof errors?.identifier?.message === 'string' ? errors?.identifier?.message : ''}
             />

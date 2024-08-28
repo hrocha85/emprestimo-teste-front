@@ -1,3 +1,9 @@
+
+
+import { Snackbar, Alert, Box, Typography, SnackbarCloseReason } from '@mui/material';
+import React from 'react';
+import { useState } from 'react';
+
 export function formatToBRL(value: number): string {
   return (value / 100).toLocaleString('pt-BR', {
     style: 'currency',
@@ -15,3 +21,4 @@ export function formatIdentifier(identifier: string, type: string) {
   }
   return identifier;
 };
+
