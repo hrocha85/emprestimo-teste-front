@@ -8,9 +8,7 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loanSchema } from '../../schemas/loan';
-import InputMask from 'react-input-mask';
 import { formatIdentifier, formatToBRL } from '@/app/utils';
-
 
 
 export default function Persons() {
@@ -21,8 +19,6 @@ export default function Persons() {
   const [selectedPersonMinLoanAmount, setSelectedPersonMinLoanAmount] = useState<number | null>(null);
   const [selectedPersonMaxLoanAmount, setSelectedPersonMaxLoanAmount] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [status, setStatus] = useState<string>('');
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
   const [severity, setSeverity] = useState<'success' | 'error'>('success'); // Adicionando estado para controlar o tipo de alerta
@@ -67,12 +63,14 @@ export default function Persons() {
     setSelectedPersonName(null);
     setSelectedPersonMinLoanAmount(null);
     setSelectedPersonMaxLoanAmount(null);
+    setValue('amount', undefined)
+    setValue('numberOfInstallments', undefined)
   };
 
-  const { register, handleSubmit, watch, formState: { errors }, setValue } = useForm({
+  const { register, handleSubmit, watch, formState: { errors }, getValues, setValue } = useForm({
     resolver: zodResolver(loanSchema),
   });
-
+  
   const watchedFields = watch(['amount', 'numberOfInstallments']);
 
   const isButtonDisabled = () => {
@@ -82,9 +80,14 @@ export default function Persons() {
   const [modalLoading, setModalLoading] = useState<boolean>(false);
 
   const onSubmit = async (data: any) => {
-    console.log(data, "data");
     const { amount, numberOfInstallments } = data;
-    const amountNumber = Number(amount);
+
+    const formatToBRLWithoutSymbol = (value: number): string => {
+      let valueStr = value.toFixed(2).replace('.', '');
+      return valueStr;
+    };
+
+    const amountNumber = formatToBRLWithoutSymbol(amount);
     const installmentsNumber = Number(numberOfInstallments);
 
     setModalLoading(true);
@@ -103,11 +106,22 @@ export default function Persons() {
 
       if (!response.ok) {
         const errorData = await response.json(); 
-        setStatus(errorData?.message?.toString() || 'Erro ao solicitar empréstimo');
+        const minLoan = selectedPersonMinLoanAmount ?? 0
+        const maxLoan = selectedPersonMaxLoanAmount ?? 0
+
+        switch (errorData?.message?.toString()) {
+          case `Loan amount is less than the minimum allowed: ${selectedPersonMinLoanAmount}`:
+            setStatus(`O valor do empréstimo é inferior ao mínimo permitido: ${formatToBRL(minLoan)}`)
+            break;
+          case `Loan amount exceeds the maximum allowed: ${selectedPersonMaxLoanAmount}`:
+            setStatus( `O valor do empréstimo excede o máximo permitido: ${formatToBRL(maxLoan)}`)
+            break;
+          default:
+            setStatus(errorData?.message?.toString() || 'Erro ao solicitar empréstimo');
+        }
+        
         setSeverity('error'); // Define o tipo de alerta como erro
       } else {
-        const data = await response.json();
-        console.log('Sucesso:', data);
         setStatus('Empréstimo solicitado com sucesso');
         setSeverity('success'); // Define o tipo de alerta como sucesso
       }  
@@ -122,6 +136,28 @@ export default function Persons() {
     setSnackbarOpen(false);
   };
 
+  function formatCurrency(value: string): string {
+    if (!value || !/\d/.test(value)) {
+      return 'R$ 0,00';
+    }
+
+    value = value.replace(/\D/g, '');
+
+    let formattedValue = (parseInt(value, 10) / 100).toFixed(2);
+    
+    let [integerPart, decimalPart] = formattedValue.split('.');
+    
+    integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    
+    return `R$ ${integerPart},${decimalPart}`;
+  }
+  
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = event.target.value;
+    const formattedValue = formatCurrency(rawValue);
+    setValue('amount', formattedValue);
+  };
+  
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
       <Box display='flex' justifyContent='space-between' alignItems='center' width='100%'>
@@ -185,33 +221,15 @@ export default function Persons() {
             Cadastrar Empréstimo para {selectedPersonName}
           </Typography>
           <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ mt: 2 }}>
-
               <TextField
                 fullWidth
                 label="Valor"
-                type="text"
-                {...register('amount', {
-                  required: 'O valor é obrigatório',
-                  validate: (value) => {
-                    const numericValue = parseFloat(value.replace(/[^0-9,-]+/g, '').replace(',', '.'));
-                    return numericValue >= 3000 || 'Não será possível realizar seu empréstimo';
-                  },
-                })}
+                type="string"
                 error={!!errors?.amount}
                 helperText={typeof errors?.amount?.message === 'string' ? errors.amount.message : ''}
                 sx={{ my: 2 }}
-                InputProps={{
-                  inputComponent: InputMask as any,
-                  inputProps: {
-                    mask: 'R$ 999.999.999,99',
-                    maskChar: null,
-                    onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-                      // Remove caracteres não numéricos e formata corretamente
-                      const numericValue = parseFloat(event.target.value.replace(/[^0-9,-]+/g, '').replace(',', '.'));
-                      setValue('amount', numericValue);
-                    },
-                  },
-                }}
+                value={getValues('amount')}
+                onChange={handleChange}
               />
 
               <TextField
